@@ -40,36 +40,43 @@ namespace weave {
 
     static DWORD WINAPI Writer(void*) {
         g_writerId.store(GetCurrentThreadId());
-        for (;;) {
-            std::deque<Record> batch;
-            bool stopping;
-            uint64_t dropped;
-            {
-                std::lock_guard<std::mutex> lock(g_mutex);
-                batch.swap(g_queue);
-                stopping = !g_accepting;
-                dropped = g_dropped;
-                g_dropped = 0;
+        try {
+            for (;;) {
+                std::deque<Record> batch;
+                bool stopping;
+                uint64_t dropped;
+                {
+                    std::lock_guard<std::mutex> lock(g_mutex);
+                    batch.swap(g_queue);
+                    stopping = !g_accepting;
+                    dropped = g_dropped;
+                    g_dropped = 0;
+                }
+                for (const auto& record : batch)
+                    Deliver(record);
+                if (dropped) {
+                    Record report;
+                    GetSystemTimeAsFileTime(&report.time);
+                    report.thread = GetCurrentThreadId();
+                    report.level = Severity::Warn;
+                    report.source = "weave";
+                    report.message = "event=logger.dropped count=" + std::to_string(dropped);
+                    Deliver(report);
+                }
+                if (stopping)
+                    return 0;
+                WaitForSingleObject(g_event, INFINITE);
             }
-            for (const auto& record : batch)
-                Deliver(record);
-            if (dropped) {
-                Record report;
-                GetSystemTimeAsFileTime(&report.time);
-                report.thread = GetCurrentThreadId();
-                report.level = Severity::Warn;
-                report.source = "weave";
-                report.message = "event=logger.dropped count=" + std::to_string(dropped);
-                Deliver(report);
-            }
-            if (stopping)
-                return 0;
-            WaitForSingleObject(g_event, INFINITE);
+        } catch (...) {
+            std::lock_guard<std::mutex> lock(g_mutex);
+            g_accepting = false;
+            g_queue.clear();
+            OutputDebugStringA("weave: log writer failed\n");
+            return 0;
         }
     }
 
     bool Logger::Init() {
-        ErrorScope preserve;
         if (!g_cfg.logCallback)
             return true;
         g_event = CreateEventW(nullptr, FALSE, FALSE, nullptr);
@@ -81,10 +88,12 @@ namespace weave {
         }
         g_thread = CreateThread(nullptr, 0, Writer, nullptr, 0, nullptr);
         if (!g_thread) {
+            const DWORD error = GetLastError();
             std::lock_guard<std::mutex> lock(g_mutex);
             g_accepting = false;
             CloseHandle(g_event);
             g_event = nullptr;
+            SetLastError(error);
             return false;
         }
         return true;

@@ -19,8 +19,12 @@ namespace weave {
     CallScope::CallScope() {
         std::lock_guard<std::mutex> lock(g_gate);
         entered = g_running;
-        if (entered) { ++g_calls; ++g_depth; }
+        if (entered) {
+            ++g_calls;
+            ++g_depth;
+        }
     }
+
     CallScope::~CallScope() {
         if (entered) {
             std::lock_guard<std::mutex> lock(g_gate);
@@ -28,6 +32,7 @@ namespace weave {
             --g_depth;
         }
     }
+
     WorkScope::WorkScope() { ++g_work; }
     WorkScope::~WorkScope() { --g_work; }
 
@@ -37,10 +42,14 @@ namespace weave {
     };
     static void CALLBACK RunWork(PTP_CALLBACK_INSTANCE instance, void* context) {
         std::unique_ptr<Work> work(static_cast<Work*>(context));
-        try { work->callback(instance, work->context); }
-        catch (...) { LOG_ERROR("background callback failed"); }
+        try {
+            work->callback(instance, work->context);
+        } catch (...) {
+            LOG_ERROR("background callback failed");
+        }
         --g_work;
     }
+
     bool SubmitWork(PTP_SIMPLE_CALLBACK callback, void* context, PTP_CALLBACK_ENVIRON environment) {
         auto work = std::make_unique<Work>(Work{callback, context});
         ++g_work;
@@ -165,20 +174,16 @@ namespace weave {
         if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
                                reinterpret_cast<LPCWSTR>(&WeaveStart), &pinned))
             return WEAVE_START_FAILED;
-        if (g_cfg.logCallback && !GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
-                               reinterpret_cast<LPCWSTR>(g_cfg.logCallback), &pinned))
-            return WEAVE_START_FAILED;
         Logger::SetLevel(g_cfg.logLevel);
-        if (!Logger::Init()) {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        if (!Logger::Init())
             return WEAVE_START_FAILED;
-        }
         g_stopEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
         if (g_stopEvent)
             g_worker = CreateThread(nullptr, 0, WorkerMain, nullptr, 0, nullptr);
         if (!g_worker) {
             const DWORD error = GetLastError();
-            if (g_stopEvent) CloseHandle(g_stopEvent);
+            if (g_stopEvent)
+                CloseHandle(g_stopEvent);
             g_stopEvent = nullptr;
             Logger::Shutdown();
             SetLastError(error);
