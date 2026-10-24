@@ -17,6 +17,7 @@ namespace weave {
     static thread_local unsigned g_depth = 0;
 
     CallScope::CallScope() {
+        Logger::ErrorScope preserve;
         std::lock_guard<std::mutex> lock(g_gate);
         entered = g_running;
         if (entered) {
@@ -26,6 +27,7 @@ namespace weave {
     }
 
     CallScope::~CallScope() {
+        Logger::ErrorScope preserve;
         if (entered) {
             std::lock_guard<std::mutex> lock(g_gate);
             --g_calls;
