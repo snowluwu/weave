@@ -1,0 +1,64 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [dev]
+    tags: ['v*']
+  pull_request:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: microsoft/setup-msbuild@v2
+      - name: Check release version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          if ("${{ github.ref_name }}" -cne "v$version") { throw "Tag does not match VERSION" }
+      - name: Build
+        run: msbuild weave.sln /p:Configuration=Release /p:Platform=x64 /verbosity:minimal
+      - name: Package SDK
+        run: |
+          $package = Join-Path $env:RUNNER_TEMP 'weave-sdk'
+          New-Item -ItemType Directory -Path "$package/include", "$package/lib", "$package/bin", "$package/licenses", 'release' -Force | Out-Null
+          Copy-Item include/weave.h "$package/include"
+          Copy-Item dist/x64/Release/weave_proxy.lib "$package/lib"
+          Copy-Item dist/x64/Release/weave_proxy.dll "$package/bin"
+          Copy-Item README.md, LICENSE, VERSION $package
+          Copy-Item external/minhook/LICENSE.txt "$package/licenses/MinHook.txt"
+          Compress-Archive "$package/*" release/weave-sdk-x64.zip
+          Copy-Item dist/x64/Release/weave_proxy.pdb release/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: weave-build
+          path: release/*
+          if-no-files-found: error
+          compression-level: 0
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: weave-build
+          path: release
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          fail_on_unmatched_files: true
+          generate_release_notes: true

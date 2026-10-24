@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64"><Configuration>Debug</Configuration><Platform>x64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B8438C57-71E7-49F9-81EB-58AB44503B72}</ProjectGuid>
+    <RootNamespace>weave</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Debug'">true</UseDebugLibraries>
+    <UseDebugLibraries Condition="'$(Configuration)'!='Debug'">false</UseDebugLibraries>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
+    <OutDir>$(MSBuildProjectDirectory)\dist\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(MSBuildProjectDirectory)\build\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>weave_proxy</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <PreprocessorDefinitions>WEAVE_PROXY_EXPORTS;WIN32_LEAN_AND_MEAN;NOMINMAX;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;$(ProjectDir)external\minhook\include;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary Condition="'$(Configuration)'=='Debug'">MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary Condition="'$(Configuration)'!='Debug'">MultiThreaded</RuntimeLibrary>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization Condition="'$(Configuration)'=='Release'">MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ResourceCompile><AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ResourceCompile>
+    <Link><GenerateDebugInformation>true</GenerateDebugInformation><AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies></Link>
+  </ItemDefinitionGroup>
+  <Target Name="GenerateVersion" BeforeTargets="ClCompile;ResourceCompile">
+    <MakeDir Directories="$(IntDir)" />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(ProjectDir)tools\version.ps1&quot; -OutputDirectory &quot;$(IntDir).&quot;" />
+  </Target>
+  <ItemGroup>
+    <ClCompile Include="src\core\config.cpp" />
+    <ClCompile Include="src\core\logger.cpp" />
+    <ClCompile Include="src\core\runtime.cpp" />
+    <ClCompile Include="src\core\utils.cpp" />
+    <ClCompile Include="src\hook\async.cpp" />
+    <ClCompile Include="src\hook\hooks.cpp" />
+    <ClCompile Include="src\hook\tcp.cpp" />
+    <ClCompile Include="src\hook\udp.cpp" />
+    <ClCompile Include="src\net\socks5.cpp" />
+    <ClCompile Include="external\minhook\src\buffer.c" />
+    <ClCompile Include="external\minhook\src\hook.c" />
+    <ClCompile Include="external\minhook\src\trampoline.c" />
+    <ClCompile Include="external\minhook\src\hde\hde64.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\weave.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="src\core\config.hpp" />
+    <ClInclude Include="src\core\logger.hpp" />
+    <ClInclude Include="src\core\runtime.hpp" />
+    <ClInclude Include="src\core\utils.hpp" />
+    <ClInclude Include="src\hook\async.hpp" />
+    <ClInclude Include="src\hook\hooks.hpp" />
+    <ClInclude Include="src\hook\tcp.hpp" />
+    <ClInclude Include="src\hook\udp.hpp" />
+    <ClInclude Include="src\net\socks5.hpp" />
+    <ResourceCompile Include="src\version.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>
