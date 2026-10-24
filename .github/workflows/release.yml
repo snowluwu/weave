@@ -24,9 +24,11 @@ jobs:
       - uses: microsoft/setup-msbuild@v2
       - name: Check release version
         if: startsWith(github.ref, 'refs/tags/')
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
         run: |
           $version = (Get-Content VERSION -Raw).Trim()
-          if ("${{ github.ref_name }}" -cne "v$version") { throw "Tag does not match VERSION" }
+          if ($env:RELEASE_TAG -cne "v$version") { throw "Tag does not match VERSION" }
       - name: Build
         run: msbuild weave.sln /p:Configuration=Release /p:Platform=x64 /verbosity:minimal
       - name: Package SDK

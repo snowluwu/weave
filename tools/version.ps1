@@ -9,7 +9,7 @@ $parts = $version.Split('.')
 foreach ($part in $parts) {
     if ([uint64]$part -gt 65535) { throw 'Version component exceeds Windows resource limits' }
 }
-$hash = git -C $root rev-parse --verify --quiet HEAD
+$hash = git -C $root rev-parse --short=12 --verify --quiet HEAD
 if ($LASTEXITCODE -ne 0) { $hash = 'uncommitted' }
 $header = "#pragma once`n#define WEAVE_VERSION `"$version+$hash`"`n#define WEAVE_FILE_VERSION $($parts -join ','),0`n#define WEAVE_FILE_VERSION_STRING `"$version.0`"`n"
 $path = Join-Path $OutputDirectory 'version.h'
