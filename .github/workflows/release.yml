@@ -2,7 +2,7 @@ name: Build and Release
 
 on:
   push:
-    tags: ['v*']
+    tags: ['*']
   workflow_dispatch:
 
 permissions:
@@ -26,7 +26,7 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           $version = (Get-Content VERSION -Raw).Trim()
-          if ($env:RELEASE_TAG -cne "v$version") { throw "Tag does not match VERSION" }
+          if ($env:RELEASE_TAG -cne $version) { throw "Tag does not match VERSION" }
       - name: Build
         run: msbuild weave.sln /p:Configuration=Release /p:Platform=x64 /verbosity:minimal
       - name: Package SDK

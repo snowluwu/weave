@@ -15,7 +15,7 @@ The root `VERSION` file is the source of the three-component package version. Th
 
 ## Artifacts
 
-The workflow builds pushes and pull requests to `dev`, version tags and manual runs. Build artifacts contain:
+The workflow builds version tags and manual runs. Build artifacts contain:
 
 ```text
 weave-sdk-x64.zip
@@ -31,4 +31,4 @@ weave-sdk-x64.zip
 weave_proxy.pdb
 ```
 
-The SDK DLL, import library and separate PDB come from the same build. Keep the PDB matching the deployed DLL. GitHub Releases are created for `v*` tags only when the tag matches `VERSION`, for example `v0.0.1` for `0.0.1`.
+The SDK DLL, import library and separate PDB come from the same build. Keep the PDB matching the deployed DLL. GitHub Releases are created for tags that match `VERSION`, for example `0.0.1`.
