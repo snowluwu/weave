@@ -2,10 +2,7 @@ name: Build and Release
 
 on:
   push:
-    branches: [dev]
     tags: ['v*']
-  pull_request:
-    branches: [dev]
   workflow_dispatch:
 
 permissions:
