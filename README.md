@@ -1,6 +1,6 @@
-# Weave
+# Weave: SOCKS5 Proxy Library for Windows
 
-**weave** adds SOCKS5 proxy support to Windows applications through Winsock interception. It handles TCP and UDP connections inside the host process and exposes a C API with C++ wrappers.
+**Weave** adds SOCKS5 proxy support to Windows applications through Winsock interception. It handles TCP and UDP connections inside the host process and exposes a C API with C++ wrappers.
 
 ## Features
 
@@ -14,7 +14,10 @@ Requires Windows x64 and a running SOCKS5 proxy. UDP traffic requires proxy supp
 
 ## Quick Start
 
-Link `weave_proxy.lib`, include `weave.h` and place `weave_proxy.dll` beside your application. Configure and start weave outside `DllMain` before the application starts networking:
+> [!IMPORTANT]
+> Call `Configure` and `Start` outside `DllMain`, before the application starts networking.
+
+Link `weave_proxy.lib`, include `weave.h` and place `weave_proxy.dll` beside your application. Configure and start weave before the application starts networking:
 
 ```cpp
 #include <weave.h>
