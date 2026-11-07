@@ -39,6 +39,7 @@ jobs:
           Copy-Item dist/x64/Release/weave_proxy.lib "$package/lib"
           Copy-Item dist/x64/Release/weave_proxy.dll "$package/bin"
           Copy-Item README.md, LICENSE, VERSION $package
+          Copy-Item docs "$package/docs" -Recurse
           Copy-Item external/minhook/LICENSE.txt "$package/licenses/MinHook.txt"
           Compress-Archive "$package/*" release/weave-sdk-x64.zip
           Copy-Item dist/x64/Release/weave_proxy.pdb release/
