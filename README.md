@@ -2,6 +2,8 @@
 
 **Weave** adds SOCKS5 proxy support to Windows applications through Winsock interception. It handles TCP and UDP connections inside the host process and exposes a C API with C++ wrappers.
 
+One project using **Weave** is [Discord Droute](https://github.com/snowluwu/droute).
+
 ## Features
 
 - **TCP and UDP:** SOCKS5 CONNECT and UDP ASSOCIATE for supported IPv4 traffic.
