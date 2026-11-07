@@ -21,6 +21,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+          fetch-depth: 0
       - uses: microsoft/setup-msbuild@v2
       - name: Check release version
         if: startsWith(github.ref, 'refs/tags/')
@@ -43,6 +44,15 @@ jobs:
           Copy-Item external/minhook/LICENSE.txt "$package/licenses/MinHook.txt"
           Compress-Archive "$package/*" release/weave-sdk-x64.zip
           Copy-Item dist/x64/Release/weave_proxy.pdb release/
+      - name: Generate release notes
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: orhun/git-cliff-action@v4
+        with:
+          version: v2.14.2
+          config: .github/cliff.toml
+          args: --current
+        env:
+          OUTPUT: release/release-notes.md
       - uses: actions/upload-artifact@v4
         with:
           name: weave-build
@@ -62,6 +72,9 @@ jobs:
           path: release
       - uses: softprops/action-gh-release@v2
         with:
-          files: release/*
+          files: |
+            release/weave-sdk-x64.zip
+            release/weave_proxy.pdb
           fail_on_unmatched_files: true
-          generate_release_notes: true
+          name: Release ${{ github.ref_name }}
+          body_path: release/release-notes.md
